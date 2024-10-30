@@ -134,7 +134,7 @@ class OnBoardingActivity : AppCompatActivity() {
 
         }
     }
-
+    /*
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_pager, menu)
         return true
@@ -148,4 +148,6 @@ class OnBoardingActivity : AppCompatActivity() {
 
         return super.onOptionsItemSelected(item)
     }
+
+     */
 }

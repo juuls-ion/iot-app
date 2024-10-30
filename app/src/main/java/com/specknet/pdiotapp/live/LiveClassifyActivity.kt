@@ -10,7 +10,6 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.util.Log
-import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
@@ -22,10 +21,9 @@ import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
 import kotlin.collections.ArrayList
-import kotlin.math.abs
 
 
-class LiveDataActivity : AppCompatActivity() {
+class LiveClassifyActivity : AppCompatActivity() {
 
     // global graph variables
     lateinit var dataSet_res_accel_x: LineDataSet
@@ -44,9 +42,6 @@ class LiveDataActivity : AppCompatActivity() {
     lateinit var respeckChart: LineChart
     lateinit var thingyChart: LineChart
 
-    lateinit var text: TextView
-
-
     // global broadcast receiver so we can unregister it
     lateinit var respeckLiveUpdateReceiver: BroadcastReceiver
     lateinit var thingyLiveUpdateReceiver: BroadcastReceiver
@@ -61,7 +56,6 @@ class LiveDataActivity : AppCompatActivity() {
         setContentView(R.layout.activity_live_data)
 
         setupCharts()
-        setupActivity()
 
         // set up the broadcast receiver
         respeckLiveUpdateReceiver = object : BroadcastReceiver() {
@@ -84,7 +78,6 @@ class LiveDataActivity : AppCompatActivity() {
 
                     time += 1
                     updateGraph("respeck", x, y, z)
-                    updateActivity(x, y, z)
 
                 }
             }
@@ -254,20 +247,6 @@ class LiveDataActivity : AppCompatActivity() {
         }
 
 
-    }
-
-
-    fun setupActivity(){
-        text = findViewById(R.id.test_display)
-        text.setText(R.string.undefined)
-    }
-
-    fun updateActivity(res_x: Float, res_y: Float, res_z: Float) {
-
-        if (abs(res_x) > 0.2 )
-            text.setText(R.string.walking)
-        else
-            text.setText(R.string.standing)
     }
 
 
