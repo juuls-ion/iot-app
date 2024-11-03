@@ -21,6 +21,11 @@ import com.specknet.pdiotapp.R
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
+import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.support.common.FileUtil
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.FloatBuffer
 import kotlin.collections.ArrayList
 import kotlin.math.abs
 
@@ -55,6 +60,47 @@ class LiveDataActivity : AppCompatActivity() {
 
     val filterTestRespeck = IntentFilter(Constants.ACTION_RESPECK_LIVE_BROADCAST)
     val filterTestThingy = IntentFilter(Constants.ACTION_THINGY_BROADCAST)
+
+    companion object {
+
+        private const val MODEL_PATH = "model.tflite"
+    }
+
+    private val tflite by lazy {
+        Interpreter(
+            FileUtil.loadMappedFile(this, MODEL_PATH))
+    }
+
+
+    fun floatArrayToBuffer(floatArray: FloatArray): FloatBuffer? {
+        val byteBuffer: ByteBuffer = ByteBuffer
+            .allocateDirect(floatArray.size * 4)
+
+        byteBuffer.order(ByteOrder.nativeOrder())
+
+        val floatBuffer: FloatBuffer = byteBuffer.asFloatBuffer()
+
+        floatBuffer.put(floatArray)
+        floatBuffer.position(0)
+        return floatBuffer
+    }
+
+    fun doInference():  Map<String, FloatBuffer?> {
+        val input = floatArrayOf(63.0F, 1.0F, 3.0F, 145.0F , 233.0F , 1.0F, 0.0F, 150.0F, 0.0F, 2.3F, 0.0F, 0.0F, 1.0F)
+
+        val inF = floatArrayToBuffer(input)
+        var outs = floatArrayOf(0.0F)
+
+        var outF = floatArrayToBuffer(outs)
+
+        val inputs: Map<String, FloatBuffer?> = mapOf("x" to inF)
+
+        var outputs: Map<String, FloatBuffer?> = mutableMapOf("prediction" to outF)
+
+        tflite.runSignature(inputs, outputs, "predictor")
+        return outputs
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
