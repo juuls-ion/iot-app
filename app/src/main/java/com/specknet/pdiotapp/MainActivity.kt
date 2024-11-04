@@ -18,9 +18,9 @@ import androidx.core.app.ActivityCompat
 import com.google.android.material.snackbar.Snackbar
 import com.specknet.pdiotapp.bluetooth.BluetoothSpeckService
 import com.specknet.pdiotapp.bluetooth.ConnectingActivity
-import com.specknet.pdiotapp.live.LiveClassifyActivity
 import com.specknet.pdiotapp.live.LiveDataActivity
 import com.specknet.pdiotapp.onboarding.OnBoardingActivity
+import com.specknet.pdiotapp.test.ClassifyingActivity
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.Utils
 import kotlinx.android.synthetic.main.activity_main.*
@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
 
     fun setupClickListeners() {
         liveProcessingButton.setOnClickListener {
-            val intent = Intent(this, LiveDataActivity::class.java)
+            val intent = Intent(this, ClassifyingActivity::class.java)
             startActivity(intent)
         }
 

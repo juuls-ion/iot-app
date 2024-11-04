@@ -83,6 +83,10 @@
             android:exported="true"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".test.ClassifyingActivity"
+            android:exported="true"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".RecordingActivity"
             android:exported="true"
             android:screenOrientation="portrait" />
