@@ -305,15 +305,12 @@ class LiveDataActivity : AppCompatActivity() {
 
     fun setupActivity(){
         text = findViewById(R.id.test_display)
-        text.setText(R.string.undefined)
+
     }
 
     fun updateActivity(res_x: Float, res_y: Float, res_z: Float) {
 
-        if (abs(res_x) > 0.2 )
-            text.setText(R.string.walking)
-        else
-            text.setText(R.string.standing)
+
     }
 
 

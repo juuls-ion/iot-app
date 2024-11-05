@@ -48,8 +48,20 @@
 
     <string name="respeck_accel">Accel = (%1$.3f, %2$.3f, %3$.3f)</string>
     <string name="respeck_gyro">Gyro = (%1$.3f, %2$.3f, %3$.3f)</string>
-
     <string name="thingy_accel">Accel = (%1$.3f, %2$.3f, %3$.3f)</string>
     <string name="thingy_gyro">Gyro = (%1$.3f, %2$.3f, %3$.3f)</string>
     <string name="thingy_mag">Mag = (%1$.3f, %2$.3f, %3$.3f)</string>
+    <string name="activity_ascending">Ascending Stair</string>
+    <string name="activity_descending">Descending Stairs</string>
+    <string name="activity_lying_back">Lying on Back</string>
+    <string name="activity_lying_stomach">Lying on Stomach</string>
+    <string name="activity_lying_left">Lying Left</string>
+    <string name="activity_lying_right">Lying Right</string>
+    <string name="activity_misc">Miscellaneous Movement</string>
+    <string name="activity_walking">Walking</string>
+    <string name="activity_running">Running</string>
+    <string name="activity_shuffle">Shuffle Walking</string>
+    <string name="activity_sitting_standing">Sitting/Standing</string>
+    <string name="activity_undefined">UNDEFINED</string>
 </resources>
+

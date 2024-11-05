@@ -32,7 +32,6 @@
             android:background="#03A9F4"
             android:text="Live Classification"
             android:textColor="#FFFFFF"
-            android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@+id/live_button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

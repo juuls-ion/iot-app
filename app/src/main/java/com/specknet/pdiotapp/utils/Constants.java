@@ -74,5 +74,4 @@ public class Constants {
     public static final String THINGY_LIVE_DATA = "thingy_live_data";
 
 
-
 }
