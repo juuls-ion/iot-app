@@ -6,11 +6,12 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimary">
 
-
     <LinearLayout
-        android:layout_width="372dp"
-        android:layout_height="663dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
         android:orientation="vertical"
+        android:background="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -30,7 +31,7 @@
             android:textColor="@color/colorPrimaryDark" />
 
         <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/thingy_chart"
+            android:id="@+id/bar_chart"
             android:layout_width="match_parent"
             android:layout_height="200dp" />
 
@@ -80,9 +81,9 @@
                 android:layout_marginEnd="10dp"
                 android:text="Daily Goal 1"
                 android:textAlignment="textEnd"
+                android:textAllCaps="false"
                 android:textColor="@color/colorPrimaryDark"
-                android:textSize="36sp"
-                android:textStyle="bold" />
+                android:textSize="36sp" />
         </LinearLayout>
 
 
@@ -133,8 +134,7 @@
                 android:text="Daily Goal 2"
                 android:textAlignment="textEnd"
                 android:textColor="@color/colorPrimaryDark"
-                android:textSize="36sp"
-                android:textStyle="bold" />
+                android:textSize="36sp" />
         </LinearLayout>
 
         <TextView
@@ -143,7 +143,37 @@
             android:layout_height="wrap_content"
             android:text="UNCLASSIFIED"
             android:textAlignment="center"
-            android:textSize="36sp" />
+            android:textSize="36sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp"
+
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/classify_stop_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="10dp"
+                android:layout_gravity="center_vertical"
+                android:background="@color/colorAccent"
+                android:text="Stop Recording" />
+
+            <Button
+                android:id="@+id/classify_start_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="10dp"
+                android:text="Start Recording"
+                android:background="@color/colorAccent"
+                android:layout_gravity="center_vertical"/>
+
+        </LinearLayout>
 
 
     </LinearLayout>

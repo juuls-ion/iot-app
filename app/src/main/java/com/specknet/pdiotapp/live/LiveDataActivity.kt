@@ -27,7 +27,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.collections.ArrayList
-import kotlin.math.abs
 
 
 class LiveDataActivity : AppCompatActivity() {
@@ -181,7 +180,7 @@ class LiveDataActivity : AppCompatActivity() {
 
     fun setupCharts() {
         respeckChart = findViewById(R.id.respeck_chart)
-        thingyChart = findViewById(R.id.thingy_chart)
+        thingyChart = findViewById(R.id.bar_chart)
 
         // Respeck
 
