@@ -63,5 +63,9 @@
     <string name="activity_shuffle">Shuffle Walking</string>
     <string name="activity_sitting_standing">Sitting/Standing</string>
     <string name="activity_undefined">UNDEFINED</string>
+    <string name="resp_normal">Breathing Normally</string>
+    <string name="resp_cough">Coughing</string>
+    <string name="resp_hypervent">Hyperventilating</string>
+    <string name="resp_social">Other Social Signals</string>
 </resources>
 

@@ -19,95 +19,36 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.specknet.pdiotapp.R
-import com.specknet.pdiotapp.RecordingActivity
-import com.specknet.pdiotapp.bluetooth.ConnectingActivity
+import com.specknet.pdiotapp.utils.Activity
 import com.specknet.pdiotapp.utils.ActivityEntry
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.ExtraUtils
 import com.specknet.pdiotapp.utils.CountUpTimer
 import com.specknet.pdiotapp.utils.RESpeckLiveData
+import com.specknet.pdiotapp.utils.Resp
 import com.specknet.pdiotapp.utils.ThingyLiveData
-import org.apache.commons.lang3.ObjectUtils.Null
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
 import java.io.File
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.concurrent.TimeUnit
-
-/**
- * Enum for managing physical activities
- * */
-enum class Activity(val value: Int) {
-    UNDEFINED(-1),
-    ASCENDING(0),
-    DESCENDING(1),
-    LYING_BACK(2),
-    LYING_LEFT(3),
-    LYING_RIGHT(4),
-    LYING_STOMACH(5),
-    MISC(6),
-    WALKING(7),
-    RUNNING(8),
-    SHUFFLE(9),
-    SITTING_STANDING(10);
-
-    override fun toString(): String {
-        return when(this) {
-            ASCENDING -> "Ascending"
-            DESCENDING -> "Descending"
-            LYING_BACK -> "Lying Back"
-            LYING_LEFT -> "Lying Left"
-            LYING_RIGHT -> "Lying Right"
-            LYING_STOMACH -> "Lying Stomach"
-            WALKING -> "Walking"
-            MISC -> "Misc"
-            RUNNING -> "Running"
-            SHUFFLE -> "Shuffling"
-            SITTING_STANDING -> "Sitting/Standing"
-            else -> "Undefined"
-        }
-    }
-
-    companion object {
-        fun find(value: Int?): Activity = Activity.values().find { it.value == value }?:Activity.UNDEFINED
-
-        fun parse(value: String): Activity = find(value.toInt())
-
-        fun toStringResource(value: Activity?): Int {
-            return when(value){
-                ASCENDING -> R.string.activity_ascending
-                DESCENDING -> R.string.activity_descending
-                LYING_BACK -> R.string.activity_lying_back
-                LYING_LEFT -> R.string.activity_lying_left
-                LYING_RIGHT -> R.string.activity_lying_right
-                LYING_STOMACH -> R.string.activity_lying_stomach
-                WALKING -> R.string.activity_walking
-                MISC -> R.string.activity_misc
-                RUNNING -> R.string.activity_running
-                SHUFFLE -> R.string.activity_shuffle
-                SITTING_STANDING -> R.string.activity_sitting_standing
-                else -> R.string.activity_undefined
-            }
-        }
-    }
-}
 
 
 class ClassifyingActivity : AppCompatActivity() {
 
 
     // Model setup
-    private val MODEL_PATH = "model.tflite"
-    private val tflite by lazy {
+    private val physical_model by lazy {
         Interpreter(
-            FileUtil.loadMappedFile(this, MODEL_PATH))
+            FileUtil.loadMappedFile(this,  "model.tflite"))
+    }
+
+    private val resp_model by lazy {
+        Interpreter(
+            FileUtil.loadMappedFile(this, "model.tflite"))
     }
 
     // Data Stream Setup
@@ -125,17 +66,26 @@ class ClassifyingActivity : AppCompatActivity() {
 
 
     // Background classification Task
-
     var saveActivityData: Boolean = false
-    var curAction: Activity = Activity.UNDEFINED
+    val sampleSize = 10  // defines the sample size to average over
+
+    // physical actions
+    var physicalActivity = Array(sampleSize) { Activity.UNDEFINED}
+    // Gets the mode of the physical activity array
+    var curAction: () -> Activity = {physicalActivity.groupingBy { it }.eachCount().maxByOrNull {it.value}?.key?:Activity.UNDEFINED}
+
+    // respiratory signals
+    var respSignals = Array(sampleSize) { Resp.UNDEFINED }
+    // Gets the mode of the physical activity array
+    var curResp: () -> Resp = {respSignals.groupingBy { it }.eachCount().maxByOrNull {it.value}?.key?:Resp.UNDEFINED}
+
+    // Initialised a background task to update the two action arrays
     lateinit var mainHandler: Handler
     private val updateClassifyTextTask = object : Runnable {
         override fun run() {
-
-            curAction = getCurrentAction()
-            updateClassifyText(curAction)
-            saveAction(curAction)
-
+            updatePhysicalActivity()
+            updateRespSignals()
+            saveAction()
             mainHandler.postDelayed(this, 1000)
         }
     }
@@ -171,6 +121,7 @@ class ClassifyingActivity : AppCompatActivity() {
         scheduledUpdate = object: CountUpTimer(1000) {
             override fun onTick(elapsedTime: Long) {
                 updateGraph()
+                updateClassifyText()
             }
         }
         scheduledUpdate.start()
@@ -193,7 +144,7 @@ class ClassifyingActivity : AppCompatActivity() {
 
                     Log.d("respeckLive", "onReceive: Updated Stream")
 
-                    streamCallback()
+                    updateStream()
                 }
             }
         }
@@ -221,7 +172,7 @@ class ClassifyingActivity : AppCompatActivity() {
 
                     Log.d("thingyLive", "onReceive: Updated Stream")
 
-                    streamCallback()
+                    updateStream()
 
                 }
             }
@@ -303,11 +254,22 @@ class ClassifyingActivity : AppCompatActivity() {
 
     // Update methods
 
-    fun updateClassifyText(action: Activity?){
-        var newText: Int = Activity.toStringResource(action)
-        val classifyText = findViewById<TextView>(R.id.classify)
-        classifyText.setText(newText)
+    fun updatePhysicalActivity() {
+        ExtraUtils.moveLeft(physicalActivity, Activity.UNDEFINED)
+        physicalActivity[physicalActivity.size-1] = getCurrentAction()
+    }
 
+    fun updateRespSignals() {
+        ExtraUtils.moveLeft(respSignals, Resp.UNDEFINED)
+        respSignals[respSignals.size-1] = getCurrentResp()
+    }
+
+    fun updateClassifyText(){
+        val physicalText = findViewById<TextView>(R.id.physical_classify_text)
+        val respText = findViewById<TextView>(R.id.resp_classify_text)
+
+        physicalText.setText(curAction().toStringResource())
+        respText.setText(curResp().toStringResource())
     }
 
     fun updateGraph() {
@@ -357,12 +319,12 @@ class ClassifyingActivity : AppCompatActivity() {
 
     // Functionality
 
-    fun streamCallback() {
+    fun updateStream() {
         Log.d("stream", "streamCallback: stream current is " + stream[stream.size-1].joinToString(", "))
         // Move to next item if array is full
         if (stream[stream.size-1].all{it != 0f}) {
             Log.d("stream", "streamCallback: Attempting rolling window")
-            stream = ExtraUtils.moveLeft(stream, inputSize)
+            stream = ExtraUtils.moveLeft(stream, FloatArray(inputSize))
         }
 
         Log.d("stream", "streamCallback: Moved data, current is "+stream[stream.size-1].joinToString(", "))
@@ -378,13 +340,31 @@ class ClassifyingActivity : AppCompatActivity() {
             return Activity.UNDEFINED
 
         val outB = FloatBuffer.allocate(4 * 11)
-        val out = ExtraUtils.classify(stream, outB, tflite)!!.array()
+        val out = ExtraUtils.classify(stream, outB, physical_model, 0).array()
 
         Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
 
-        return ExtraUtils.fromOneHot(out)?:Activity.UNDEFINED
+        return Activity.fromOneHot(out)
     }
-    
+
+    // Remember that the stream may be different here
+    fun getCurrentResp() : Resp {
+        Log.d("classify", "updateClassifyText: Called")
+
+        if (Activity.isDynamic(curAction()) || stream[0].all { it == 0f })
+            return Resp.UNDEFINED
+
+        val outB = FloatBuffer.allocate(4 * 11)
+        // builds the input as a thre first three elements of each item in the list
+
+        val out = ExtraUtils.classify(stream, outB, resp_model, 1).array()
+
+        Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
+
+        return Resp.fromOneHot(out)
+    }
+
+
 
     fun getFile(): File {
         // Initialised intended filename
@@ -424,7 +404,7 @@ class ClassifyingActivity : AppCompatActivity() {
     }
 
 
-    fun saveAction(action: Activity){
+    fun saveAction(action: Activity = curAction()){
         if (!saveActivityData)
             return
 

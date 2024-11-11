@@ -138,7 +138,16 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/classify"
+            android:id="@+id/physical_classify_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="UNCLASSIFIED"
+            android:textAlignment="center"
+            android:textSize="36sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/resp_classify_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="UNCLASSIFIED"
