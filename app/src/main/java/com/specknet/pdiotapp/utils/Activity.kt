@@ -9,14 +9,15 @@ enum class Activity(override val value: Int, override val type: String = "physic
     UNDEFINED(-1),
     ASCENDING(0),
     DESCENDING(1),
-    LYING_BACK(2),
-    LYING_LEFT(3),
-    LYING_RIGHT(4),
-    LYING_STOMACH(5),
-    MISC(6),
-    WALKING(7),
-    RUNNING(8),
-    SHUFFLE(9),
+    MISC(2),
+    WALKING(3),
+    RUNNING(4),
+    SHUFFLE(5),
+
+    LYING_BACK(6),
+    LYING_LEFT(7),
+    LYING_RIGHT(8),
+    LYING_STOMACH(9),
     SITTING_STANDING(10);
 
     override fun toString(): String {
@@ -59,10 +60,16 @@ enum class Activity(override val value: Int, override val type: String = "physic
 
         override fun fromOneHot(arr: FloatArray): Activity {
             // arg max function on arr
-            val action = arr.withIndex().maxByOrNull { it.value }?.index
-            return find(action)
-        }
+            var offset = 0
+            if (arr.size == 5) // static
+                offset = 6
 
+            val action = arr.withIndex().maxByOrNull { it.value }?.index
+            if (action != null)
+                return find(action + offset)
+            return find(null)
+
+        }
         override fun type(): String {
             return "physical_activity"
         }

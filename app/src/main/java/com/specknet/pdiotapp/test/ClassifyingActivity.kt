@@ -45,6 +45,24 @@ class ClassifyingActivity : AppCompatActivity() {
             6)
     }
 
+    private val dynamic_static_model by lazy {
+        Model(Interpreter(
+            FileUtil.loadMappedFile(this,  "dynamic_static_model.tflite")),
+            6)
+    }
+
+    private val static_model by lazy {
+        Model(Interpreter(
+            FileUtil.loadMappedFile(this,  "static_model.tflite")),
+            6)
+    }
+
+    private val dynamic_model by lazy {
+        Model(Interpreter(
+            FileUtil.loadMappedFile(this,  "dynamic_model.tflite")),
+            6)
+    }
+
     private val resp_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this, "resp_model.tflite")),
@@ -328,13 +346,13 @@ class ClassifyingActivity : AppCompatActivity() {
     fun getCurrentAction() : Activity {
         Log.d("classify", "updateClassifyText: Called")
 
+        // Check dynamic or static
+        val out = physical_model.classify(stream, FloatBuffer.allocate(11)).array()
+
         if (stream[0].all { it == 0f })
             return Activity.UNDEFINED
 
-        val outB = FloatBuffer.allocate(4 * 11)
-        val out = physical_model.classify(stream, outB).array()
-
-        Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
+        Log.d("classify", "updateClassifyText: classified! " + Activity.fromOneHot(out))
 
         return Activity.fromOneHot(out)
     }
