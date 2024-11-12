@@ -20,20 +20,18 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.specknet.pdiotapp.R
 import com.specknet.pdiotapp.utils.Activity
-import com.specknet.pdiotapp.utils.ActivityEntry
 import com.specknet.pdiotapp.utils.Constants
-import com.specknet.pdiotapp.utils.ExtraUtils
 import com.specknet.pdiotapp.utils.CountUpTimer
+import com.specknet.pdiotapp.utils.ExtraUtils
+import com.specknet.pdiotapp.utils.FileManager
+import com.specknet.pdiotapp.utils.IOutputEnum
+import com.specknet.pdiotapp.utils.Model
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.Resp
 import com.specknet.pdiotapp.utils.ThingyLiveData
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
-import java.io.File
 import java.nio.FloatBuffer
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
 import java.util.concurrent.TimeUnit
 
 
@@ -42,13 +40,15 @@ class ClassifyingActivity : AppCompatActivity() {
 
     // Model setup
     private val physical_model by lazy {
-        Interpreter(
-            FileUtil.loadMappedFile(this,  "model.tflite"))
+        Model(Interpreter(
+            FileUtil.loadMappedFile(this,  "model.tflite")),
+            6)
     }
 
     private val resp_model by lazy {
-        Interpreter(
-            FileUtil.loadMappedFile(this, "resp_model.tflite"))
+        Model(Interpreter(
+            FileUtil.loadMappedFile(this, "resp_model.tflite")),
+            3)
     }
 
     // Data Stream Setup
@@ -64,8 +64,9 @@ class ClassifyingActivity : AppCompatActivity() {
     private var bufferSize: Int = 51
     private var inputSize: Int = 6
 
+    lateinit var fileManager: FileManager
 
-    // Background classification Task
+    // Background classification task
     var saveActivityData: Boolean = false
     val sampleSize = 10  // defines the sample size to average over
 
@@ -85,8 +86,8 @@ class ClassifyingActivity : AppCompatActivity() {
         override fun run() {
             updatePhysicalActivity()
             updateRespSignals()
-            saveAction()
-            mainHandler.postDelayed(this, 1000)
+            save(curAction(), curResp())
+            mainHandler.postDelayed(this, 100)
         }
     }
 
@@ -110,9 +111,9 @@ class ClassifyingActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_classify)
+        fileManager = FileManager(getExternalFilesDir(null), Activity)
 
-        setupFile()
+        setContentView(R.layout.activity_classify)
 
         setupClickListeners()
 
@@ -195,7 +196,9 @@ class ClassifyingActivity : AppCompatActivity() {
         super.onDestroy()
         unregisterReceiver(respeckReceiver)
         unregisterReceiver(thingyReceiver)
-        saveAction(Activity.UNDEFINED)
+
+        fileManager.close()
+
         looperRespeck.quit()
         looperThingy.quit()
         scheduledUpdate.stop()
@@ -233,24 +236,12 @@ class ClassifyingActivity : AppCompatActivity() {
         }
 
         stopRecordingButton.setOnClickListener {
-            saveAction(Activity.UNDEFINED)
+            save()
             saveActivityData = false
         }
 
     }
 
-
-    fun setupFile() {
-        val file = getFile()
-        // Creates a new recording file with the correct formatting if it doesn't already exist
-        if (file.exists())
-            return
-
-        val HEADER = "TIMESTAMP, ACTIVITY\n"
-        file.createNewFile()
-        file.appendText(HEADER)
-        Log.d("save", "Successfully wrote 1 line to file")
-    }
 
     // Update methods
 
@@ -273,8 +264,9 @@ class ClassifyingActivity : AppCompatActivity() {
     }
 
     fun updateGraph() {
-        val entriesRaw = loadFile()
-        val actMap = mutableMapOf<Activity, Float>()
+        fileManager.enum = Activity
+        val entriesRaw = fileManager.parse()
+        val actMap = mutableMapOf<IOutputEnum, Float>()
         var value: Float
         var diff: Float
 
@@ -340,7 +332,7 @@ class ClassifyingActivity : AppCompatActivity() {
             return Activity.UNDEFINED
 
         val outB = FloatBuffer.allocate(4 * 11)
-        val out = ExtraUtils.classify(stream, outB, physical_model, 0).array()
+        val out = physical_model.classify(stream, outB).array()
 
         Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
 
@@ -357,7 +349,7 @@ class ClassifyingActivity : AppCompatActivity() {
         val outB = FloatBuffer.allocate(4 * 11)
         // builds the input as a thre first three elements of each item in the list
 
-        val out = ExtraUtils.classify(stream, outB, resp_model, 1).array()
+        val out = resp_model.classify(stream, outB).array()
 
         Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
 
@@ -366,94 +358,17 @@ class ClassifyingActivity : AppCompatActivity() {
 
 
 
-    fun getFile(): File {
-        // Initialised intended filename
-        val time = Calendar.getInstance().time
-        val formatter = SimpleDateFormat("yyyy-MM-dd")
-        var filename = "recording-"+formatter.format(time)+".csv"
+    fun save(act: Activity = Activity.UNDEFINED,
+             resp: Resp = Resp.UNDEFINED) {
 
-        var path = getExternalFilesDir(null)   //get file directory for this package
-
-        Log.d("save", "getFile: Initiliased filename as "+ filename)
-
-        //create fileOut object
-        return File(path, filename)
-    }
-
-
-    fun writeLine(action: Activity) {
-        val file = getFile()
-        if (!file.exists())
-            return
-
-        var row = ""
-
-        val time = Calendar.getInstance().time
-        val formatter = SimpleDateFormat("HH:mm:ss")
-        val now = formatter.format(time)
-
-        row += now
-        row += ","
-        row += action.value
-        row += "\n"
-
-        if (!file.readLines().last().contains(""+action.value))
-            file.appendText(row)
-
-        Log.d("save", "Wrote " + row.dropLast(1) + " to file")
-    }
-
-
-    fun saveAction(action: Activity = curAction()){
         if (!saveActivityData)
             return
 
-        setupFile()
-
-        writeLine(action)
+        fileManager.enum = Activity
+        fileManager.write(act)
+        fileManager.enum = Resp
+        fileManager.write(resp)
 
     }
-
-
-    fun loadFile(): List<ActivityEntry> {
-        Log.d("load", "Checking file ...")
-
-        val file = getFile()
-
-        if (!file.exists())
-            return emptyList()
-        Log.d("load", "Loading file ...")
-
-        val formatter = SimpleDateFormat("HH:mm:ss")
-        var st = Calendar.getInstance().time
-        var end: Date
-        var action: Activity
-        var values: List<String>
-
-        var entries = buildList {
-
-            for (line in file.readLines().drop(1).reversed()) {
-                values = line.split(",")
-                end = st
-                st = formatter.parse(values[0])?:st
-                action = Activity.parse(values[1])
-
-                if(end.before(st))
-                    add(ActivityEntry(action, end, st))
-                else
-                    add(ActivityEntry(action, st, end))
-
-
-            }
-        }
-
-        return entries
-    }
-
-
-
-
-
-
 
 }

@@ -5,7 +5,7 @@ import com.specknet.pdiotapp.R
 /**
  * Enum for managing physical activities
  * */
-enum class Activity(val value: Int) {
+enum class Activity(override val value: Int, override val type: String = "physical_activity"):IOutputEnum {
     UNDEFINED(-1),
     ASCENDING(0),
     DESCENDING(1),
@@ -36,7 +36,7 @@ enum class Activity(val value: Int) {
         }
     }
 
-    fun toStringResource(): Int {
+    override fun toStringResource(): Int {
         return when(this){
             ASCENDING -> R.string.activity_ascending
             DESCENDING -> R.string.activity_descending
@@ -54,15 +54,17 @@ enum class Activity(val value: Int) {
     }
 
 
-    companion object {
-        fun find(value: Int?): Activity = Activity.values().find { it.value == value }?:Activity.UNDEFINED
+    companion object: IOutputEnumCompanion {
+        override fun find(value: Int?): Activity = Activity.values().find { it.value == value }?:Activity.UNDEFINED
 
-        fun parse(value: String): Activity = find(value.toInt())
-
-        fun fromOneHot(arr: FloatArray): Activity {
+        override fun fromOneHot(arr: FloatArray): Activity {
             // arg max function on arr
             val action = arr.withIndex().maxByOrNull { it.value }?.index
             return find(action)
+        }
+
+        override fun type(): String {
+            return "physical_activity"
         }
 
         fun isDynamic(action: Activity): Boolean {

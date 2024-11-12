@@ -2,7 +2,7 @@ package com.specknet.pdiotapp.utils
 
 import com.specknet.pdiotapp.R
 
-enum class Resp(val value: Int) {
+enum class Resp(override val value: Int, override val type: String = "respiratory"): IOutputEnum {
     UNDEFINED(-1),
     BREATHING_NORMAL(0),
     HYPERVENTILATING(1),
@@ -20,7 +20,7 @@ enum class Resp(val value: Int) {
         }
     }
 
-    fun toStringResource(): Int {
+    override fun toStringResource(): Int {
         return when(this){
             BREATHING_NORMAL -> R.string.resp_normal
             HYPERVENTILATING -> R.string.resp_hypervent
@@ -30,12 +30,14 @@ enum class Resp(val value: Int) {
         }
     }
 
-    companion object {
-        fun find(value: Int?): Resp = Resp.values().find { it.value == value }?:UNDEFINED
+    companion object: IOutputEnumCompanion {
+        override fun find(value: Int?): Resp = Resp.values().find { it.value == value }?:UNDEFINED
 
-        fun parse(value: String): Resp = find(value.toInt())
+        override fun type(): String {
+            return "physical_activity"
+        }
 
-        fun fromOneHot(arr: FloatArray): Resp {
+        override fun fromOneHot(arr: FloatArray): Resp {
             // arg max function on arg
             val action = arr.withIndex().maxByOrNull { it.value }?.index?:-2
             return find(action.div(2))
