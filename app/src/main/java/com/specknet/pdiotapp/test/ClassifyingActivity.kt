@@ -48,7 +48,7 @@ class ClassifyingActivity : AppCompatActivity() {
 
     private val resp_model by lazy {
         Interpreter(
-            FileUtil.loadMappedFile(this, "model.tflite"))
+            FileUtil.loadMappedFile(this, "resp_model.tflite"))
     }
 
     // Data Stream Setup

@@ -9,6 +9,7 @@ enum class Resp(val value: Int) {
     COUGHING(2),
     SOCIAL_SIGNAL(3);
 
+
     override fun toString(): String {
         return when(this) {
             BREATHING_NORMAL -> "Breathing Normally"
@@ -35,9 +36,9 @@ enum class Resp(val value: Int) {
         fun parse(value: String): Resp = find(value.toInt())
 
         fun fromOneHot(arr: FloatArray): Resp {
-            // arg max function on arr
-            val action = arr.withIndex().maxByOrNull { it.value }?.index
-            return find(action)
+            // arg max function on arg
+            val action = arr.withIndex().maxByOrNull { it.value }?.index?:-2
+            return find(action.div(2))
         }
     }
 }
