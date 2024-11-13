@@ -23,17 +23,18 @@
             android:id="@+id/activityChartTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Daily Roundup"
+            android:text="Live Classification"
             android:textAlignment="center"
             android:textSize="36sp"
             android:textStyle="bold"
             android:textAllCaps="true"
             android:textColor="@color/colorPrimaryDark" />
 
-        <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/bar_chart"
-            android:layout_width="match_parent"
-            android:layout_height="200dp" />
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" >
+        </Space>
 
         <LinearLayout
             android:id="@+id/daily_goal_1"
@@ -86,6 +87,11 @@
                 android:textSize="36sp" />
         </LinearLayout>
 
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" >
+        </Space>
 
         <LinearLayout
             android:id="@+id/daily_goal_2"
@@ -137,6 +143,12 @@
                 android:textSize="36sp" />
         </LinearLayout>
 
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" >
+        </Space>
+
         <TextView
             android:id="@+id/physical_classify_text"
             android:layout_width="match_parent"
@@ -145,6 +157,12 @@
             android:textAlignment="center"
             android:textSize="36sp"
             android:textStyle="bold" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" >
+        </Space>
 
         <TextView
             android:id="@+id/resp_classify_text"
@@ -155,9 +173,15 @@
             android:textSize="36sp"
             android:textStyle="bold" />
 
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" >
+        </Space>
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_margin="10dp"
 
             android:orientation="horizontal">
@@ -184,7 +208,11 @@
 
         </LinearLayout>
 
-
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" >
+        </Space>
     </LinearLayout>
 
     <androidx.constraintlayout.widget.Guideline

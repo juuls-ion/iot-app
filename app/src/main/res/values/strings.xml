@@ -67,5 +67,10 @@
     <string name="resp_cough">Coughing</string>
     <string name="resp_hypervent">Hyperventilating</string>
     <string name="resp_social">Other Social Signals</string>
+    <string name="logbook_title">Logbook: \n\n%1$s</string>
+    <string name="logbook_entry">\t%1$s:\n</string>
+    <string name="logbook_value_header">\n\n%1$s</string>
+    <string name="logbook_value">%1$s\n</string>
+
 </resources>
 

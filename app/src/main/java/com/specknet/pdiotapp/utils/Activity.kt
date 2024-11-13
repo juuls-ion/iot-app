@@ -12,13 +12,13 @@ enum class Activity(override val value: Int, override val type: String = "physic
     MISC(2),
     WALKING(3),
     RUNNING(4),
-    SHUFFLE(5),
+    SHUFFLE(10),
 
-    LYING_BACK(6),
-    LYING_LEFT(7),
-    LYING_RIGHT(8),
-    LYING_STOMACH(9),
-    SITTING_STANDING(10);
+    LYING_BACK(5),
+    LYING_LEFT(6),
+    LYING_RIGHT(7),
+    LYING_STOMACH(8),
+    SITTING_STANDING(9);
 
     override fun toString(): String {
         return when(this) {
@@ -62,7 +62,7 @@ enum class Activity(override val value: Int, override val type: String = "physic
             // arg max function on arr
             var offset = 0
             if (arr.size == 5) // static
-                offset = 6
+                offset = 5
 
             val action = arr.withIndex().maxByOrNull { it.value }?.index
             if (action != null)
@@ -72,6 +72,13 @@ enum class Activity(override val value: Int, override val type: String = "physic
         }
         override fun type(): String {
             return "physical_activity"
+        }
+
+        override fun stringList(): List<String> {
+            return buildList {
+                for (a in Activity.values())
+                    add(a.toString())
+            }
         }
 
         fun isDynamic(action: Activity): Boolean {

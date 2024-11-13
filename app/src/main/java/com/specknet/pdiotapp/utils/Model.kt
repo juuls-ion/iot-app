@@ -6,19 +6,19 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
-class Model(val model: Interpreter, val inpDim: Int) {
+class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int) {
 
-    fun streamToInput(floatArray: List<FloatArray>): ByteBuffer {
+    fun streamToInput(floatArray: Array<FloatArray>): ByteBuffer {
         // Calculate the total size needed for the ByteBuffer
-        val byteBuffer = ByteBuffer.allocateDirect(floatArray.size * inpDim * 4) // 4 bytes for each float
+        val byteBuffer = ByteBuffer.allocateDirect(inpDimHeight * inpDimWidth * 4) // 4 bytes for each float
         byteBuffer.order(ByteOrder.nativeOrder()) // Set the byte order to native
 
         // Fill the ByteBuffer with data
-        for (i in floatArray.indices) {
-            for (j in floatArray[i].indices.reversed().drop(6-inpDim)) {
-                byteBuffer.putFloat(floatArray[i][j])
-            }
-        }
+        for (i in 0 until inpDimHeight)
+            for (j in 0 until inpDimWidth)
+                byteBuffer.putFloat(floatArray[i+((floatArray.size-1)-inpDimHeight)][j])
+
+
         byteBuffer.rewind() // Reset the position to the beginning
         return byteBuffer
     }
@@ -35,7 +35,7 @@ class Model(val model: Interpreter, val inpDim: Int) {
 
         // Get rid of buffer using dropLast
         Log.d("classify", "classify: Attempting input cleaning")
-        val inF = streamToInput(input.dropLast(1))
+        val inF = streamToInput(input)
 
         Log.d("classify", "classify: Running model")
 

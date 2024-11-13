@@ -27,4 +27,6 @@ interface IOutputEnumCompanion {
     fun fromOneHot(arr: FloatArray): IOutputEnum
 
     fun type(): String
+
+    fun stringList(): List<String>
 }

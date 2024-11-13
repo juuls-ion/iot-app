@@ -34,13 +34,19 @@ enum class Resp(override val value: Int, override val type: String = "respirator
         override fun find(value: Int?): Resp = Resp.values().find { it.value == value }?:UNDEFINED
 
         override fun type(): String {
-            return "physical_activity"
+            return "respiratory"
         }
 
         override fun fromOneHot(arr: FloatArray): Resp {
             // arg max function on arg
             val action = arr.withIndex().maxByOrNull { it.value }?.index?:-2
             return find(action.div(2))
+        }
+        override fun stringList(): List<String> {
+            return buildList {
+                for (a in Resp.values())
+                    add(a.toString())
+            }
         }
     }
 }

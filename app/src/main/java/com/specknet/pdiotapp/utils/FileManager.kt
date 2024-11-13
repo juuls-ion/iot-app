@@ -11,7 +11,7 @@ class FileManager(val extern_dir: File?, var enum: IOutputEnumCompanion) {
     fun getFile(date: Date = Calendar.getInstance().time): File {
         // Initialised intended filename
         val formatter = SimpleDateFormat("yyyy_MM_dd")
-        val filename = enum.type()+"recording_"+formatter.format(date)+".csv"
+        val filename = enum.type()+"_recording_"+formatter.format(date)+".csv"
 
         Log.d("save", "getFile: Initiliased filename as "+ filename)
 
@@ -54,14 +54,16 @@ class FileManager(val extern_dir: File?, var enum: IOutputEnumCompanion) {
     }
 
     fun parse(date: Date = Calendar.getInstance().time): List<ActivityEntry> {
-        Log.d("load", "Checking file ...")
+
 
         val file = getFile(date)
+
+        Log.d("load", "Checking file <" + file.name+">")
 
         if (!file.exists())
             return emptyList()
 
-        Log.d("load", "Loading file ...")
+        Log.d("load", "Loading file <" + file.name+">")
 
         val formatter = SimpleDateFormat("HH:mm:ss")
         var st = Calendar.getInstance().time

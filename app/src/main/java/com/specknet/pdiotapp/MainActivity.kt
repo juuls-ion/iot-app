@@ -9,8 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -18,9 +16,9 @@ import androidx.core.app.ActivityCompat
 import com.google.android.material.snackbar.Snackbar
 import com.specknet.pdiotapp.bluetooth.BluetoothSpeckService
 import com.specknet.pdiotapp.bluetooth.ConnectingActivity
-import com.specknet.pdiotapp.live.LiveDataActivity
 import com.specknet.pdiotapp.onboarding.OnBoardingActivity
 import com.specknet.pdiotapp.test.ClassifyingActivity
+import com.specknet.pdiotapp.test.LogbookActivity
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.Utils
 import kotlinx.android.synthetic.main.activity_main.*
@@ -28,9 +26,9 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     // buttons and textviews
-    lateinit var liveProcessingButton: Button
+    lateinit var classifyButton: Button
     lateinit var pairingButton: Button
-    lateinit var recordButton: Button
+    lateinit var logbookButton: Button
 
     // permissions
     lateinit var permissionAlertDialog: AlertDialog.Builder
@@ -64,9 +62,9 @@ class MainActivity : AppCompatActivity() {
             startActivity(introIntent)
         }
 
-        liveProcessingButton = findViewById(R.id.live_button)
+        classifyButton = findViewById(R.id.live_button)
         pairingButton = findViewById(R.id.ble_button)
-        recordButton = findViewById(R.id.record_button)
+        logbookButton = findViewById(R.id.record_button)
 
         permissionAlertDialog = AlertDialog.Builder(this)
 
@@ -83,7 +81,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun setupClickListeners() {
-        liveProcessingButton.setOnClickListener {
+        classifyButton.setOnClickListener {
             val intent = Intent(this, ClassifyingActivity::class.java)
             startActivity(intent)
         }
@@ -93,8 +91,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        recordButton.setOnClickListener {
-            val intent = Intent(this, RecordingActivity::class.java)
+        logbookButton.setOnClickListener {
+            val intent = Intent(this, LogbookActivity::class.java)
             startActivity(intent)
         }
     }

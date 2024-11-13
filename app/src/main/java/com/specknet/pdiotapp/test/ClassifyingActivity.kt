@@ -33,6 +33,7 @@ import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
 import java.nio.FloatBuffer
 import java.util.concurrent.TimeUnit
+import kotlin.math.pow
 
 
 class ClassifyingActivity : AppCompatActivity() {
@@ -42,31 +43,32 @@ class ClassifyingActivity : AppCompatActivity() {
     private val physical_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "model.tflite")),
-            6)
+            6, 50)
     }
 
-    private val dynamic_static_model by lazy {
+    private val dyn_stat_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "dynamic_static_model.tflite")),
-            6)
+            6, 50)
     }
 
-    private val static_model by lazy {
-        Model(Interpreter(
-            FileUtil.loadMappedFile(this,  "static_model.tflite")),
-            6)
-    }
-
-    private val dynamic_model by lazy {
+    private val dyn_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "dynamic_model.tflite")),
-            6)
+            6, 50)
     }
+
+    private val stat_model by lazy {
+        Model(Interpreter(
+            FileUtil.loadMappedFile(this,  "static_model.tflite")),
+            6, 50)
+    }
+
 
     private val resp_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this, "resp_model.tflite")),
-            3)
+            3, 50)
     }
 
     // Data Stream Setup
@@ -86,7 +88,7 @@ class ClassifyingActivity : AppCompatActivity() {
 
     // Background classification task
     var saveActivityData: Boolean = false
-    val sampleSize = 10  // defines the sample size to average over
+    val sampleSize = 3  // defines the sample size to average over
 
     // physical actions
     var physicalActivity = Array(sampleSize) { Activity.UNDEFINED}
@@ -105,18 +107,11 @@ class ClassifyingActivity : AppCompatActivity() {
             updatePhysicalActivity()
             updateRespSignals()
             save(curAction(), curResp())
-            mainHandler.postDelayed(this, 100)
+            mainHandler.postDelayed(this, 500)
         }
     }
 
 
-    // Bar Chart
-    var x_vals = buildList {
-        for (i in IntRange(1, 11))
-            add(""+Activity.find(i))
-    }
-    lateinit var data: BarDataSet
-    lateinit var chart: BarChart
     lateinit var scheduledUpdate: CountUpTimer
 
     // Buttons
@@ -135,11 +130,9 @@ class ClassifyingActivity : AppCompatActivity() {
 
         setupClickListeners()
 
-        setupGraph()
 
         scheduledUpdate = object: CountUpTimer(1000) {
             override fun onTick(elapsedTime: Long) {
-                updateGraph()
                 updateClassifyText()
             }
         }
@@ -225,26 +218,6 @@ class ClassifyingActivity : AppCompatActivity() {
 
     // Setup methods
 
-    fun setupGraph() {
-        chart = findViewById(R.id.bar_chart)
-        var entries: List<BarEntry> = buildList {
-
-            for(x in x_vals.indices) {
-                var entry = BarEntry(x.toFloat(), 0f)
-                add(entry)
-            }
-
-        }
-
-        data = BarDataSet(entries, "data")
-        data.stackLabels = x_vals.toTypedArray()
-
-
-        chart.setFitBars(true)
-        chart.data = BarData(data)
-    }
-
-
     fun setupClickListeners() {
         startRecordingButton = findViewById(R.id.classify_start_button)
         stopRecordingButton = findViewById(R.id.classify_stop_button)
@@ -281,52 +254,6 @@ class ClassifyingActivity : AppCompatActivity() {
         respText.setText(curResp().toStringResource())
     }
 
-    fun updateGraph() {
-        fileManager.enum = Activity
-        val entriesRaw = fileManager.parse()
-        val actMap = mutableMapOf<IOutputEnum, Float>()
-        var value: Float
-        var diff: Float
-
-        Log.d("graph", "Initialised variables")
-
-        // Get sum of activities
-        for (entry in entriesRaw) {
-            diff = TimeUnit.MILLISECONDS.toMinutes(entry.end.time - entry.start.time).toFloat()
-            actMap[entry.action] = (actMap.get(entry.action) ?: 0f) + diff
-        }
-
-        Log.d("graph", "Summed activities")
-
-        // Build data set to use
-        val labels = mutableListOf<String>()
-        var index = 0
-        val entries = buildList<BarEntry> {
-            for(x in x_vals.indices) {
-                value = actMap.get(Activity.find(x))?:-1f
-
-                if (Activity.find(x) == Activity.UNDEFINED ||
-                    value == -1f)
-                    continue
-                Log.d("graph", "added bar " + Activity.find(x).toString())
-                add(BarEntry(index.toFloat(), value, Activity.find(x).toString()))
-                index ++
-                labels.add(Activity.find(x).toString())
-            }
-
-        }
-
-        data.values = entries
-        data.stackLabels = labels.toTypedArray()
-
-        Log.d("graph", "Set data")
-
-        chart.setFitBars(true)
-        chart.data = BarData(data)
-        chart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
-        chart.invalidate()
-    }
-
     // Functionality
 
     fun updateStream() {
@@ -334,10 +261,11 @@ class ClassifyingActivity : AppCompatActivity() {
         // Move to next item if array is full
         if (stream[stream.size-1].all{it != 0f}) {
             Log.d("stream", "streamCallback: Attempting rolling window")
+            Log.d("stream-data", "" + stream[stream.size-1].joinToString(","))
             stream = ExtraUtils.moveLeft(stream, FloatArray(inputSize))
         }
 
-        Log.d("stream", "streamCallback: Moved data, current is "+stream[stream.size-1].joinToString(", "))
+        Log.d("stream", "streamCallback: Moved data, current is "+ stream[stream.size-1].joinToString(", "))
 
     }
 
@@ -347,12 +275,23 @@ class ClassifyingActivity : AppCompatActivity() {
         Log.d("classify", "updateClassifyText: Called")
 
         // Check dynamic or static
-        val out = physical_model.classify(stream, FloatBuffer.allocate(11)).array()
+        var out = dyn_stat_model.classify(stream, FloatBuffer.allocate(11)).array()
+        Log.d("classify-act", out.joinToString(", "))
+        if (out[0] > out[1]) {
+            Log.d("classify-act", "dynamic")
+            out = dyn_model.classify(stream, FloatBuffer.allocate(6)).array()
+        }
+        else {
+            Log.d("classify-act", "static")
+            out = stat_model.classify(stream, FloatBuffer.allocate(5)).array()
+        }
+
+//        var out = physical_model.classify(stream, FloatBuffer.allocate(11)).array()
 
         if (stream[0].all { it == 0f })
             return Activity.UNDEFINED
 
-        Log.d("classify", "updateClassifyText: classified! " + Activity.fromOneHot(out))
+        Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
 
         return Activity.fromOneHot(out)
     }
@@ -364,7 +303,7 @@ class ClassifyingActivity : AppCompatActivity() {
         if (Activity.isDynamic(curAction()) || stream[0].all { it == 0f })
             return Resp.UNDEFINED
 
-        val outB = FloatBuffer.allocate(4 * 11)
+        val outB = FloatBuffer.allocate( 11)
         // builds the input as a thre first three elements of each item in the list
 
         val out = resp_model.classify(stream, outB).array()
