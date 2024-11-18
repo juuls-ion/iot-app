@@ -55,7 +55,7 @@
                     android:layout_height="match_parent"
                     android:background="@drawable/circular_shape"
                     android:indeterminate="false"
-                    android:progress="50"
+                    android:progress="30"
                     android:progressDrawable="@drawable/circular_progress_bar"
                     android:textAlignment="center" />
 
@@ -67,7 +67,7 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:gravity="center"
-                    android:text="50%"
+                    android:text="30%"
                     android:textColor="@color/colorPrimaryDark"
                     android:textSize="25sp"
                     android:textStyle="bold" />
@@ -76,11 +76,11 @@
 
             <TextView
                 android:id="@+id/daily_goal_1_text"
-                android:layout_width="match_parent"
+                android:layout_width="fill_parent"
                 android:layout_height="57dp"
                 android:layout_gravity="center_vertical"
                 android:layout_marginEnd="10dp"
-                android:text="Daily Goal 1"
+                android:text="Time Standing"
                 android:textAlignment="textEnd"
                 android:textAllCaps="false"
                 android:textColor="@color/colorPrimaryDark"
@@ -194,7 +194,9 @@
                 android:layout_margin="10dp"
                 android:layout_gravity="center_vertical"
                 android:background="@color/colorAccent"
-                android:text="Stop Recording" />
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:text="Stop" />
 
             <Button
                 android:id="@+id/classify_start_button"
@@ -202,7 +204,9 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_margin="10dp"
-                android:text="Start Recording"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:text="Start"
                 android:background="@color/colorAccent"
                 android:layout_gravity="center_vertical"/>
 

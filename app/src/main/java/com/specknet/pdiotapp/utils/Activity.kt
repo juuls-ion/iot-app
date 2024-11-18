@@ -62,7 +62,7 @@ enum class Activity(override val value: Int, override val type: String = "physic
             return find(arr.withIndex().maxByOrNull { it.value }?.index)
         }
 
-        fun fromOneHot(arr: FloatArray, static: Boolean = false): Activity {
+        fun fromOneHot(arr: FloatArray, static: Boolean): Activity {
             val action = arr.withIndex().maxByOrNull { it.value }?.index
             return if (action != null && static)
                 find(action + 6)

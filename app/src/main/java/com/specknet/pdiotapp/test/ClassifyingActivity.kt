@@ -9,48 +9,27 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.util.Log
+import android.view.KeyEvent
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarEntry
-
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.specknet.pdiotapp.R
 import com.specknet.pdiotapp.utils.Activity
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.CountUpTimer
 import com.specknet.pdiotapp.utils.ExtraUtils
 import com.specknet.pdiotapp.utils.FileManager
-import com.specknet.pdiotapp.utils.IOutputEnum
 import com.specknet.pdiotapp.utils.Model
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.Resp
 import com.specknet.pdiotapp.utils.ThingyLiveData
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
-import java.nio.FloatBuffer
-import java.util.concurrent.TimeUnit
-import kotlin.math.pow
 
 
 class ClassifyingActivity : AppCompatActivity() {
 
     // Model setup
-    private val physical_model by lazy {
-        Model(Interpreter(
-            FileUtil.loadMappedFile(this,  "model.tflite")),
-            6, 50, listOf(-0.06398553731634682, -0.50710438092695, 0.05702876667031249, -0.3801799368182589, -0.02861014707186093, 0.09644849800209886) , listOf(0.4804117697431912, 0.5289800472112214, 0.5619486513585968, 0.5838506163647519, 0.5240864795266389, 0.6206116496287748))
-    }
-
-    private val dyn_stat_model by lazy {
-        Model(Interpreter(
-            FileUtil.loadMappedFile(this,  "dynamic_static_model.tflite")),
-            6, 50, listOf(-0.06398553731634682, -0.50710438092695, 0.05702876667031249, -0.3801799368182589, -0.02861014707186093, 0.09644849800209886) , listOf(0.4804117697431912, 0.5289800472112214, 0.5619486513585968, 0.5838506163647519, 0.5240864795266389, 0.6206116496287748))
-    }
-
     private val dyn_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "dynamic_model.tflite")),
@@ -118,13 +97,34 @@ class ClassifyingActivity : AppCompatActivity() {
     lateinit var stopRecordingButton: Button
 
 
+    // REMOVE
+    lateinit var model: Model
+    var outSize = 5
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        when (keyCode) {
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                model = stat_model
+                outSize = 5
+            }
+            KeyEvent.KEYCODE_VOLUME_UP ->{
+                model = dyn_model
+                outSize = 6
+            };
+        }
+        Log.d("model", ""+outSize)
+        return true
+    }
+
+    // REMOVE
+
     // Override functions
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         fileManager = FileManager(getExternalFilesDir(null), Activity)
-
+        model = stat_model
         setContentView(R.layout.activity_classify)
 
         setupClickListeners()
@@ -269,34 +269,30 @@ class ClassifyingActivity : AppCompatActivity() {
     }
 
     // Action recording and other
-
     fun getCurrentAction() : Activity {
         Log.d("classify", "updateClassifyText: Called")
 
+        if (stream[0].all { it == 0f })
+            return Activity.UNDEFINED
+
         // Check dynamic or static
-
-
-        var out: FloatArray
-        var static = false
+        val out: FloatArray
+        val static: Boolean
         val out_dyn = dyn_model.classify(stream, Array(1) {FloatArray(6)})[0]
-        Log.d("dyn", "")
         val out_stat = stat_model.classify(stream, Array(1) {FloatArray(5)})[0]
 
-        if (out_dyn.maxOrNull()!! > out_stat.maxOrNull()!!)
+        if (outSize == 6) {
             out = out_dyn
+            static = false
+        }
         else {
             out = out_stat
             static = true
         }
 
-//        out = physical_model.classify(stream, Array(1) {FloatArray(11)})[0]
-
-        if (stream[0].all { it == 0f })
-            return Activity.UNDEFINED
-
         Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
 
-        return Activity.fromOneHot(out, static=static)
+        return Activity.fromOneHot(out, static)
     }
 
     // Remember that the stream may be different here
