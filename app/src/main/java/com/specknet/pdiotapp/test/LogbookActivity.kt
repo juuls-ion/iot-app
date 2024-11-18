@@ -187,7 +187,11 @@ private fun List<ActivityEntry>.sum(): MutableMap<IOutputEnum, Long> {
 
     // Get sum of activities
     for (entry in this) {
-        diff = TimeUnit.MILLISECONDS.toSeconds(entry.end.time - entry.start.time)
+        if (entry.end.before(entry.start))
+            diff = TimeUnit.MILLISECONDS.toSeconds(entry.start.time - entry.end.time)
+        else
+            diff = TimeUnit.MILLISECONDS.toSeconds(entry.end.time - entry.start.time)
+        Log.d("time", ""+ entry.start + " " + entry.end)
         actMap[entry.action] = (actMap.get(entry.action) ?: 0) + diff
     }
     return actMap

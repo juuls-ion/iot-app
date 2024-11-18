@@ -12,13 +12,13 @@ enum class Activity(override val value: Int, override val type: String = "physic
     MISC(2),
     WALKING(3),
     RUNNING(4),
-    SHUFFLE(10),
+    SHUFFLE(5),
 
-    LYING_BACK(5),
-    LYING_LEFT(6),
-    LYING_RIGHT(7),
-    LYING_STOMACH(8),
-    SITTING_STANDING(9);
+    LYING_BACK(6),
+    LYING_LEFT(7),
+    LYING_RIGHT(8),
+    LYING_STOMACH(9),
+    SITTING_STANDING(10);
 
     override fun toString(): String {
         return when(this) {

@@ -1,5 +1,6 @@
 package com.specknet.pdiotapp.utils
 
+import android.content.res.TypedArray
 import android.util.Log
 import org.tensorflow.lite.Interpreter
 import java.nio.ByteBuffer
@@ -8,7 +9,7 @@ import java.nio.FloatBuffer
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int, val means: List<Float>, val stds: List<Float>) {
+class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int, val means: List<Double>, val stds: List<Double>) {
 
     // Stream input is res_x res_y res_z thing_x thing_y thing_z
     fun <T>List<List<T>>.transpose(): List<List<T>> {
@@ -21,7 +22,7 @@ class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int,
         return sqrt(variance)
     }
 
-    fun appendFeatures(floatArray: Array<FloatArray>, buffer: ByteBuffer): ByteBuffer {
+    fun getFeatures(floatArray: Array<FloatArray>): List<Float> {
         // we want mean,stc,min,max of each column of the float array.
         val transpose = floatArray.map { it.asList() }.toList().transpose()
         var dim: List<Float>
@@ -29,55 +30,47 @@ class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int,
         var feature = buildList {
             for (i in (0 until inpDimWidth)) {
                 dim = transpose[i]
-                add(dim.average())
-                add(dim.std())
-                add(dim.minOf{ it })
-                add(dim.maxOf{ it })
+                add(dim.average().toFloat())
+                add(dim.std().toFloat())
+                add(dim.minOrNull()?:0f)
+                add(dim.maxOrNull()?:0f)
             }
 
-            dim = floatArray.map {it -> sqrt((it[0].pow(2) + it[1].pow(2) + it[2].pow(2)).toDouble()).toFloat() }
-            add(dim.average())
-            add(dim.std())
-            add(dim.minOf{ it })
-            add(dim.maxOf{ it })
+            dim = floatArray.map {sqrt((it[0].pow(2) + it[1].pow(2) + it[2].pow(2)).toDouble()).toFloat() }
+            add(dim.average().toFloat())
+            add(dim.std().toFloat())
+            add(dim.minOrNull()?:0f)
+            add(dim.maxOrNull()?:0f)
         }
 
-        for (feat in feature) buffer.putFloat(feat.toFloat())
-
-        return buffer
+        return feature
     }
 
 
     fun norm(floatArray: Array<FloatArray>): Array<FloatArray> {
+        var new = Array(inpDimHeight) { FloatArray(inpDimWidth){0f} }
         for (i in 0 until inpDimHeight) {
             for (j in 0 until inpDimWidth) {
-                floatArray[i][j] = (floatArray[i][j] - means[j]) / stds[j]
+                new[i][j] = ((floatArray[i][j] - means[j]) / stds[j]).toFloat()
             }
         }
 
-        return floatArray
-
+        return new
     }
 
 
-    fun streamToInput(floatArray: Array<FloatArray>): ByteBuffer {
-        // Calculate the total size needed for the ByteBuffer
-        val floatArray = norm(floatArray)
-        val byteBuffer = ByteBuffer.allocateDirect(inpDimHeight * inpDimWidth * 4 + inpDimWidth*4*4 + 16) // 4 bytes for each float
-        byteBuffer.order(ByteOrder.nativeOrder()) // Set the byte order to native
-        // Fill the ByteBuffer with data
-        for (i in 0 until inpDimHeight)
-            for (j in 0 until inpDimWidth)
-                byteBuffer.putFloat(floatArray[i+((floatArray.size-1)-inpDimHeight)][j])
+    fun streamToInput(floatArray: Array<FloatArray>): FloatArray {
+        val features = getFeatures(floatArray)
+        val _input =  norm(floatArray).map { it.asList().slice(0 until inpDimWidth) }.toList().slice(0 until inpDimHeight).flatten()
+        val input = buildList {
+            addAll(_input)
+            addAll(features)
+        }
 
-
-        appendFeatures(floatArray, byteBuffer)
-
-        byteBuffer.rewind() // Reset the position to the beginning
-        return byteBuffer
+        return input.toFloatArray()
     }
 
-    fun classify(input: Array<FloatArray>, out: FloatBuffer) : FloatBuffer{
+    fun classify(input: Array<FloatArray>, out: Array<FloatArray>) : Array<FloatArray>{
         /**
          * Runs a model on some given data, pasting it to the output array.
          * @param input Input data of format Array<FloatArray>, the last element of the array will be culled.
@@ -89,9 +82,12 @@ class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int,
 
         // Get rid of buffer using dropLast
         Log.d("classify", "classify: Attempting input cleaning")
-        val inF = streamToInput(input)
+        val inF = arrayOf(streamToInput(input))
 
         Log.d("classify", "classify: Running model")
+
+        Log.d("asda", "" + model.getInputTensor(0).shape().joinToString(","))
+        Log.d("asda", "" + inF.size + "," + inF[0].size)
 
         model.run(inF, out)
         return out

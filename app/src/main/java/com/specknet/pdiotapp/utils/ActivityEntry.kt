@@ -6,7 +6,7 @@ import java.util.Calendar
 import java.util.Date
 
 class ActivityEntry constructor(var action: IOutputEnum, var start: Date,
-                                var end: Date = Calendar.getInstance().time
+                                var end: Date
 ) {
 
 
