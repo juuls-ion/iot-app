@@ -43,7 +43,7 @@ class ClassifyingActivity : AppCompatActivity() {
     private val physical_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "model.tflite")),
-            6, 50, listOf(-0.052624739060104245f, -0.4981773556370512f, 0.05811940078095967f, -0.3793667556515435f, -0.025363258349146357f, 0.09048162019906163f) , ListOf(0.4842730884136554f, 0.5355855344330723f, 0.5617978830547341f, 0.5768714831322992f, 0.5292077937332008f, 0.6243277315595913f))
+            6, 50, List(6) {0f} , List(6) {0f})
     }
 
     private val dyn_stat_model by lazy {
@@ -105,7 +105,7 @@ class ClassifyingActivity : AppCompatActivity() {
     private val updateClassifyTextTask = object : Runnable {
         override fun run() {
             updatePhysicalActivity()
-//            updateRespSignals()
+            updateRespSignals()
             save(curAction(), curResp())
             mainHandler.postDelayed(this, 500)
         }
