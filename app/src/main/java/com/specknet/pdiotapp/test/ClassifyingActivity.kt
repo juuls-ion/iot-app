@@ -38,37 +38,36 @@ import kotlin.math.pow
 
 class ClassifyingActivity : AppCompatActivity() {
 
-    val default_mean = listOf(0f ,0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f )
     // Model setup
     private val physical_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "model.tflite")),
-            6, 50, ListOf(-0.0547099338285637f, -0.5011418776249944f, 0.056503720814108774f, -0.37810370164572565f, -0.03451282611603252f, 0.09315325483284556f) , ListOf(0.48250489954270115f, 0.53527471751506f, 0.560287196827814f, 0.5839213906437157f, 0.5246883655477732f, 0.6216943167370224f))
+            6, 50, listOf(-0.0547099338285637, -0.5011418776249944, 0.056503720814108774, -0.37810370164572565, -0.03451282611603252, 0.09315325483284556) , listOf(0.48250489954270115, 0.53527471751506, 0.560287196827814, 0.5839213906437157, 0.5246883655477732, 0.6216943167370224))
     }
 
     private val dyn_stat_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "dynamic_static_model.tflite")),
-            6, 50, List(6) {0f} , List(6) {0f})
+            6, 50, List(6) {0.0} , List(6) {0.0})
     }
 
     private val dyn_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "dynamic_model.tflite")),
-            6, 50, List(6) {0f} , List(6) {0f})
+            6, 50, List(6) {0.0} , List(6) {0.0})
     }
 
     private val stat_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "static_model.tflite")),
-            6, 50, List(6) {0f} , List(6) {0f})
+            6, 50, List(6) {0.0} , List(6) {0.0})
     }
 
 
     private val resp_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this, "resp_model.tflite")),
-            3, 50, List(3) {0f} , List(3) {0f})
+            3, 50, List(3) {0.0} , List(3) {0.0})
     }
 
     // Data Stream Setup
@@ -105,7 +104,7 @@ class ClassifyingActivity : AppCompatActivity() {
     private val updateClassifyTextTask = object : Runnable {
         override fun run() {
             updatePhysicalActivity()
-            updateRespSignals()
+//            updateRespSignals()
             save(curAction(), curResp())
             mainHandler.postDelayed(this, 500)
         }
@@ -275,25 +274,25 @@ class ClassifyingActivity : AppCompatActivity() {
         Log.d("classify", "updateClassifyText: Called")
 
         // Check dynamic or static
-        var out = dyn_stat_model.classify(stream, FloatBuffer.allocate(11)).array()
-        Log.d("classify-act", out.joinToString(", "))
-        if (out[0] > out[1]) {
-            Log.d("classify-act", "dynamic")
-            out = dyn_model.classify(stream, FloatBuffer.allocate(6)).array()
-        }
-        else {
-            Log.d("classify-act", "static")
-            out = stat_model.classify(stream, FloatBuffer.allocate(5)).array()
-        }
-
-//        var out = physical_model.classify(stream, FloatBuffer.allocate(11)).array()
+//        var out = dyn_stat_model.classify(stream, FloatBuffer.allocate(11)).array()
+//        Log.d("classify-act", out.joinToString(", "))
+//        if (out[0] > out[1]) {
+//            Log.d("classify-act", "dynamic")
+//            out = dyn_model.classify(stream, FloatBuffer.allocate(6)).array()
+//        }
+//        else {
+//            Log.d("classify-act", "static")
+//            out = stat_model.classify(stream, FloatBuffer.allocate(5)).array()
+//        }
+        var outArr = Array(1) {FloatArray(11)}
+        outArr = physical_model.classify(stream, outArr)
 
         if (stream[0].all { it == 0f })
             return Activity.UNDEFINED
 
-        Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
+        Log.d("classify", "updateClassifyText: classified! " + outArr[0].joinToString(", "))
 
-        return Activity.fromOneHot(out)
+        return Activity.fromOneHot(outArr[0])
     }
 
     // Remember that the stream may be different here
@@ -303,14 +302,14 @@ class ClassifyingActivity : AppCompatActivity() {
         if (Activity.isDynamic(curAction()) || stream[0].all { it == 0f })
             return Resp.UNDEFINED
 
-        val outB = FloatBuffer.allocate( 11)
-        // builds the input as a thre first three elements of each item in the list
+        var outArr = Array(1) {FloatArray(11)}
+        // builds the input as a the first three elements of each item in the list
 
-        val out = resp_model.classify(stream, outB).array()
+        outArr = resp_model.classify(stream, outArr)
 
-        Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
+        Log.d("classify", "updateClassifyText: classified! " + outArr[0].joinToString(", "))
 
-        return Resp.fromOneHot(out)
+        return Resp.fromOneHot(outArr[0])
     }
 
 
