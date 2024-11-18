@@ -49,6 +49,12 @@ class ClassifyingActivity : AppCompatActivity() {
             3, 50, List(3) {0.0} , List(3) {1.0})
     }
 
+    private val stairs by lazy {
+        Model(Interpreter(
+            FileUtil.loadMappedFile(this, "stairs.tflite")),
+            2, 50, listOf(-0.005597716273319358, -0.9157829319843503, 0.03485863186509338, -0.8829558903825241, 0.02734243793826669, 0.1360523029974075) , listOf(0.2884209245856949, 0.3836312868754599, 0.22782824205212457, 0.46159115569884684, 0.3674241823656614, 0.3154986600802932))
+    }
+
     // Data Stream Setup
     lateinit var respeckReceiver: BroadcastReceiver
     lateinit var thingyReceiver: BroadcastReceiver
