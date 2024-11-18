@@ -54,7 +54,7 @@ class ClassifyingActivity : AppCompatActivity() {
     private val dyn_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "dynamic_model.tflite")),
-            6, 50, List(6) {0.0} , List(6) {0.0})
+            6, 50, listOf(0.015051142293247907, -0.8575070982446138, -0.005421014789070642, -0.82624246503791, 0.030366309354079423, 0.10701040875559471) , listOf(0.3589463221620775, 0.5165023300960795, 0.33040824461145235, 0.5840629410551967, 0.483046935942814, 0.42662258411337156))
     }
 
     private val stat_model by lazy {
