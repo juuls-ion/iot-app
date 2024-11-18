@@ -278,7 +278,7 @@ class ClassifyingActivity : AppCompatActivity() {
 
         var out: FloatArray
         var static = false
-        val out_dyn = dyn_model.classify(stream, Array(1) {FloatArray(5)})[0]
+        val out_dyn = dyn_model.classify(stream, Array(1) {FloatArray(6)})[0]
         Log.d("dyn", "")
         val out_stat = stat_model.classify(stream, Array(1) {FloatArray(5)})[0]
 

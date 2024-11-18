@@ -88,6 +88,7 @@ class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int,
 
         Log.d("asda", "" + model.getInputTensor(0).shape().joinToString(","))
         Log.d("asda", "" + inF.size + "," + inF[0].size)
+        Log.d("asda", "" + model.getOutputTensor(0).shape().joinToString(","))
 
         model.run(inF, out)
         return out
