@@ -274,8 +274,9 @@ class ClassifyingActivity : AppCompatActivity() {
         Log.d("classify", "updateClassifyText: Called")
 
         // Check dynamic or static
-//        var out = dyn_stat_model.classify(stream, FloatBuffer.allocate(11)).array()
-//        Log.d("classify-act", out.joinToString(", "))
+
+        var out = dyn_stat_model.classify(stream, Array(1) {FloatArray(2)})[0]
+        Log.d("classify-act", out.joinToString(", "))
 //        if (out[0] > out[1]) {
 //            Log.d("classify-act", "dynamic")
 //            out = dyn_model.classify(stream, FloatBuffer.allocate(6)).array()
@@ -284,15 +285,14 @@ class ClassifyingActivity : AppCompatActivity() {
 //            Log.d("classify-act", "static")
 //            out = stat_model.classify(stream, FloatBuffer.allocate(5)).array()
 //        }
-        var outArr = Array(1) {FloatArray(11)}
-        outArr = physical_model.classify(stream, outArr)
+        out = physical_model.classify(stream, Array(1) {FloatArray(11)})[0]
 
         if (stream[0].all { it == 0f })
             return Activity.UNDEFINED
 
-        Log.d("classify", "updateClassifyText: classified! " + outArr[0].joinToString(", "))
+        Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
 
-        return Activity.fromOneHot(outArr[0])
+        return Activity.fromOneHot(out)
     }
 
     // Remember that the stream may be different here

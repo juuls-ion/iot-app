@@ -59,15 +59,15 @@ class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int,
     }
 
 
-    fun streamToInput(floatArray: Array<FloatArray>): FloatArray {
-        val features = getFeatures(floatArray)
-        val _input =  norm(floatArray).map { it.asList().slice(0 until inpDimWidth) }.toList().slice(0 until inpDimHeight).flatten()
+    fun streamToInput(floatArray: Array<FloatArray>): Array<FloatArray> {
+//        val features = getFeatures(floatArray)
+        val _input =  norm(floatArray).map { it.asList().slice(0 until inpDimWidth).toFloatArray() }.toList().slice(0 until inpDimHeight)
         val input = buildList {
             addAll(_input)
-            addAll(features)
+//            addAll(features)
         }
 
-        return input.toFloatArray()
+        return input.toTypedArray()
     }
 
     fun classify(input: Array<FloatArray>, out: Array<FloatArray>) : Array<FloatArray>{
