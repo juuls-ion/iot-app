@@ -58,17 +58,16 @@ enum class Activity(override val value: Int, override val type: String = "physic
     companion object: IOutputEnumCompanion {
         override fun find(value: Int?): Activity = Activity.values().find { it.value == value }?:Activity.UNDEFINED
 
-        override fun fromOneHot(arr: FloatArray): Activity {
-            // arg max function on arr
-            var offset = 0
-            if (arr.size == 5) // static
-                offset = 5
+        override fun fromOneHot(arr: FloatArray): IOutputEnum {
+            return find(arr.withIndex().maxByOrNull { it.value }?.index)
+        }
 
+        fun fromOneHot(arr: FloatArray, static: Boolean = false): Activity {
             val action = arr.withIndex().maxByOrNull { it.value }?.index
-            if (action != null)
-                return find(action + offset)
-            return find(null)
-
+            return if (action != null && static)
+                find(action + 6)
+            else
+                find(action)
         }
         override fun type(): String {
             return "physical_activity"

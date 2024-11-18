@@ -54,20 +54,20 @@ class ClassifyingActivity : AppCompatActivity() {
     private val dyn_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "dynamic_model.tflite")),
-            6, 50, List(6) {0.0} , List(6) {0.0})
+            6, 50, List(6) {0.0} , List(6) {1.0})
     }
 
     private val stat_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "static_model.tflite")),
-            6, 50, List(6) {0.0} , List(6) {0.0})
+            6, 50, List(6) {0.0} , List(6) {1.0})
     }
 
 
     private val resp_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this, "resp_model.tflite")),
-            3, 50, List(3) {0.0} , List(3) {0.0})
+            3, 50, List(3) {0.0} , List(3) {1.0})
     }
 
     // Data Stream Setup
@@ -87,7 +87,7 @@ class ClassifyingActivity : AppCompatActivity() {
 
     // Background classification task
     var saveActivityData: Boolean = false
-    val sampleSize = 3  // defines the sample size to average over
+    val sampleSize = 1  // defines the sample size to average over
 
     // physical actions
     var physicalActivity = Array(sampleSize) { Activity.UNDEFINED}
@@ -275,24 +275,28 @@ class ClassifyingActivity : AppCompatActivity() {
 
         // Check dynamic or static
 
-        var out = dyn_stat_model.classify(stream, Array(1) {FloatArray(2)})[0]
-        Log.d("classify-act", out.joinToString(", "))
-//        if (out[0] > out[1]) {
-//            Log.d("classify-act", "dynamic")
-//            out = dyn_model.classify(stream, FloatBuffer.allocate(6)).array()
-//        }
-//        else {
-//            Log.d("classify-act", "static")
-//            out = stat_model.classify(stream, FloatBuffer.allocate(5)).array()
-//        }
-        out = physical_model.classify(stream, Array(1) {FloatArray(11)})[0]
+
+        var out: FloatArray
+        var static = false
+        val out_dyn = dyn_model.classify(stream, Array(1) {FloatArray(5)})[0]
+        Log.d("dyn", "")
+        val out_stat = stat_model.classify(stream, Array(1) {FloatArray(5)})[0]
+
+        if (out_dyn.maxOrNull()!! > out_stat.maxOrNull()!!)
+            out = out_dyn
+        else {
+            out = out_stat
+            static = true
+        }
+
+//        out = physical_model.classify(stream, Array(1) {FloatArray(11)})[0]
 
         if (stream[0].all { it == 0f })
             return Activity.UNDEFINED
 
         Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
 
-        return Activity.fromOneHot(out)
+        return Activity.fromOneHot(out, static=static)
     }
 
     // Remember that the stream may be different here
