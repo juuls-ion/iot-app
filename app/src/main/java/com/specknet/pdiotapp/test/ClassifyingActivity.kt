@@ -38,37 +38,37 @@ import kotlin.math.pow
 
 class ClassifyingActivity : AppCompatActivity() {
 
-
+    val default_mean = listOf(0f ,0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f )
     // Model setup
     private val physical_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "model.tflite")),
-            6, 50)
+            6, 50, List(6) {0f} , List(6) {0f})
     }
 
     private val dyn_stat_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "dynamic_static_model.tflite")),
-            6, 50)
+            6, 50, List(6) {0f} , List(6) {0f})
     }
 
     private val dyn_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "dynamic_model.tflite")),
-            6, 50)
+            6, 50, List(6) {0f} , List(6) {0f})
     }
 
     private val stat_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "static_model.tflite")),
-            6, 50)
+            6, 50, List(6) {0f} , List(6) {0f})
     }
 
 
     private val resp_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this, "resp_model.tflite")),
-            3, 50)
+            3, 50, List(3) {0f} , List(3) {0f})
     }
 
     // Data Stream Setup

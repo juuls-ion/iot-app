@@ -5,19 +5,73 @@ import org.tensorflow.lite.Interpreter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import kotlin.math.pow
+import kotlin.math.sqrt
 
-class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int) {
+class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int, val means: List<Float>, val stds: List<Float>) {
+
+    // Stream input is res_x res_y res_z thing_x thing_y thing_z
+    fun <T>List<List<T>>.transpose(): List<List<T>> {
+        return (this[0].indices).map { i -> (this.indices).map { j -> this[j][i] } }
+    }
+
+    fun List<Float>.std(): Double {
+        val mean = this.average()
+        val variance = this.map { (it - mean).pow(2) }.average()
+        return sqrt(variance)
+    }
+
+    fun appendFeatures(floatArray: Array<FloatArray>, buffer: ByteBuffer): ByteBuffer {
+        // we want mean,stc,min,max of each column of the float array.
+        val transpose = floatArray.map { it.asList() }.toList().transpose()
+        var dim: List<Float>
+
+        var feature = buildList {
+            for (i in (0 until inpDimWidth)) {
+                dim = transpose[i]
+                add(dim.average())
+                add(dim.std())
+                add(dim.minOf{ it })
+                add(dim.maxOf{ it })
+            }
+
+            dim = floatArray.map {it -> sqrt((it[0].pow(2) + it[1].pow(2) + it[2].pow(2)).toDouble()).toFloat() }
+            add(dim.average())
+            add(dim.std())
+            add(dim.minOf{ it })
+            add(dim.maxOf{ it })
+        }
+
+        for (feat in feature) buffer.putFloat(feat.toFloat())
+
+        return buffer
+    }
+
+
+    fun norm(floatArray: Array<FloatArray>): Array<FloatArray> {
+        for (i in 0 until inpDimHeight) {
+            for (j in 0 until inpDimWidth) {
+                floatArray[i][j] = (floatArray[i][j] - means[j]) / stds[j]
+            }
+        }
+
+        return floatArray
+
+    }
+
 
     fun streamToInput(floatArray: Array<FloatArray>): ByteBuffer {
         // Calculate the total size needed for the ByteBuffer
-        val byteBuffer = ByteBuffer.allocateDirect(inpDimHeight * inpDimWidth * 4) // 4 bytes for each float
+        val floatArray = norm(floatArray)
+        val byteBuffer = ByteBuffer.allocateDirect(inpDimHeight * inpDimWidth * 4 + inpDimWidth*4*4 + 16) // 4 bytes for each float
         byteBuffer.order(ByteOrder.nativeOrder()) // Set the byte order to native
-
         // Fill the ByteBuffer with data
         for (i in 0 until inpDimHeight)
             for (j in 0 until inpDimWidth)
                 byteBuffer.putFloat(floatArray[i+((floatArray.size-1)-inpDimHeight)][j])
 
+
+        appendFeatures(floatArray, byteBuffer)
 
         byteBuffer.rewind() // Reset the position to the beginning
         return byteBuffer
