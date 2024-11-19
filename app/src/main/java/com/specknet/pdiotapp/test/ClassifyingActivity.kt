@@ -46,7 +46,7 @@ class ClassifyingActivity : AppCompatActivity() {
     private val resp_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this, "resp_model.tflite")),
-            3, 50, List(3) {0.0} , List(3) {1.0})
+            3, 50, listOf(-0.09115067049311343, -0.31081814538139524, 0.0873735311397047) , listOf(0.5362477955256391, 0.4541727252902214, 0.6463643194257788))
     }
 
     private val stairs by lazy {
