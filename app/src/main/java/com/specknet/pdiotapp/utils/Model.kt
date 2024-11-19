@@ -1,11 +1,6 @@
 package com.specknet.pdiotapp.utils
-
-import android.content.res.TypedArray
 import android.util.Log
 import org.tensorflow.lite.Interpreter
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.FloatBuffer
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -60,14 +55,7 @@ class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int,
 
 
     fun streamToInput(floatArray: Array<FloatArray>): Array<FloatArray> {
-//        val features = getFeatures(floatArray)
-        val _input =  norm(floatArray).map { it.asList().slice(0 until inpDimWidth).toFloatArray() }.toList().slice(0 until inpDimHeight)
-        val input = buildList {
-            addAll(_input)
-//            addAll(features)
-        }
-
-        return input.toTypedArray()
+        return norm(floatArray).map { it.asList().slice(0 until inpDimWidth).toFloatArray() }.toList().slice(0 until inpDimHeight).toTypedArray()
     }
 
     fun classify(input: Array<FloatArray>, out: Array<FloatArray>) : Array<FloatArray>{
@@ -85,10 +73,6 @@ class Model(val model: Interpreter, val inpDimWidth: Int, val inpDimHeight: Int,
         val inF = arrayOf(streamToInput(input))
 
         Log.d("classify", "classify: Running model")
-
-        Log.d("asda", "" + model.getInputTensor(0).shape().joinToString(","))
-        Log.d("asda", "" + inF.size + "," + inF[0].size)
-        Log.d("asda", "" + model.getOutputTensor(0).shape().joinToString(","))
 
         model.run(inF, out)
         return out
