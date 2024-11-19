@@ -25,11 +25,19 @@ import com.specknet.pdiotapp.utils.Resp
 import com.specknet.pdiotapp.utils.ThingyLiveData
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 class ClassifyingActivity : AppCompatActivity() {
 
     // Model setup
+    private val dyn_stat_model by lazy {
+        Model(Interpreter(
+            FileUtil.loadMappedFile(this,  "dynamic_static_model.tflite")),
+            6, 50, listOf(-0.06398553731634682, -0.50710438092695, 0.05702876667031249, -0.3801799368182589, -0.02861014707186093, 0.09644849800209886) , listOf(0.4804117697431912, 0.5289800472112214, 0.5619486513585968, 0.5838506163647519, 0.5240864795266389, 0.6206116496287748))
+    }
+
     private val dyn_model by lazy {
         Model(Interpreter(
             FileUtil.loadMappedFile(this,  "dynamic_model.tflite")),
@@ -49,12 +57,6 @@ class ClassifyingActivity : AppCompatActivity() {
             3, 50, listOf(-0.09115067049311343, -0.31081814538139524, 0.0873735311397047) , listOf(0.5362477955256391, 0.4541727252902214, 0.6463643194257788))
     }
 
-    private val stairs by lazy {
-        Model(Interpreter(
-            FileUtil.loadMappedFile(this, "stairs.tflite")),
-            2, 50, listOf(-0.005597716273319358, -0.9157829319843503, 0.03485863186509338, -0.8829558903825241, 0.02734243793826669, 0.1360523029974075) , listOf(0.2884209245856949, 0.3836312868754599, 0.22782824205212457, 0.46159115569884684, 0.3674241823656614, 0.3154986600802932))
-    }
-
     // Data Stream Setup
     lateinit var respeckReceiver: BroadcastReceiver
     lateinit var thingyReceiver: BroadcastReceiver
@@ -72,7 +74,7 @@ class ClassifyingActivity : AppCompatActivity() {
 
     // Background classification task
     var saveActivityData: Boolean = false
-    val sampleSize = 1  // defines the sample size to average over
+    val sampleSize = 3  // defines the sample size to average over
 
     // physical actions
     var physicalActivity = Array(sampleSize) { Activity.UNDEFINED}
@@ -89,7 +91,7 @@ class ClassifyingActivity : AppCompatActivity() {
     private val updateClassifyTextTask = object : Runnable {
         override fun run() {
             updatePhysicalActivity()
-//            updateRespSignals()
+            updateRespSignals()
             save(curAction(), curResp())
             mainHandler.postDelayed(this, 500)
         }
@@ -102,35 +104,12 @@ class ClassifyingActivity : AppCompatActivity() {
     lateinit var startRecordingButton: Button
     lateinit var stopRecordingButton: Button
 
-
-    // REMOVE
-    lateinit var model: Model
-    var outSize = 5
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        when (keyCode) {
-            KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                model = stat_model
-                outSize = 5
-            }
-            KeyEvent.KEYCODE_VOLUME_UP ->{
-                model = dyn_model
-                outSize = 6
-            };
-        }
-        Log.d("model", ""+outSize)
-        return true
-    }
-
-    // REMOVE
-
     // Override functions
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         fileManager = FileManager(getExternalFilesDir(null), Activity)
-        model = stat_model
         setContentView(R.layout.activity_classify)
 
         setupClickListeners()
@@ -256,7 +235,7 @@ class ClassifyingActivity : AppCompatActivity() {
         val respText = findViewById<TextView>(R.id.resp_classify_text)
 
         physicalText.setText(curAction().toStringResource())
-        respText.setText(curResp().toStringResource())
+        respText.setText(Resp.BREATHING_NORMAL.toStringResource())
     }
 
     // Functionality
@@ -266,11 +245,10 @@ class ClassifyingActivity : AppCompatActivity() {
         // Move to next item if array is full
         if (stream[stream.size-1].all{it != 0f}) {
             Log.d("stream", "streamCallback: Attempting rolling window")
-            Log.d("stream-data", "" + stream[stream.size-1].joinToString(","))
             stream = ExtraUtils.moveLeft(stream, FloatArray(inputSize))
         }
 
-        Log.d("stream", "streamCallback: Moved data, current is "+ stream[stream.size-1].joinToString(", "))
+        Log.d("stream", "streamCallback: Moved data, current is "+  stream.map{it.joinToString(",")}.joinToString (","))
 
     }
 
@@ -282,18 +260,17 @@ class ClassifyingActivity : AppCompatActivity() {
             return Activity.UNDEFINED
 
         // Check dynamic or static
-        val out: FloatArray
+        var out: FloatArray
         val static: Boolean
-        val out_dyn = dyn_model.classify(stream, Array(1) {FloatArray(6)})[0]
-        val out_stat = stat_model.classify(stream, Array(1) {FloatArray(5)})[0]
+        out = dyn_stat_model.classify(stream, Array(1){FloatArray(2)})[0]
 
-        if (outSize == 6) {
-            out = out_dyn
+        if (out[0] > out[1]) {// Dynamic
             static = false
+            out = dyn_model.classify(stream, Array(1) {FloatArray(6)})[0]
         }
         else {
-            out = out_stat
             static = true
+            out = stat_model.classify(stream, Array(1) {FloatArray(5)})[0]
         }
 
         Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
@@ -308,16 +285,14 @@ class ClassifyingActivity : AppCompatActivity() {
         if (Activity.isDynamic(curAction()) || stream[0].all { it == 0f })
             return Resp.UNDEFINED
 
-        var outArr = Array(1) {FloatArray(11)}
         // builds the input as a the first three elements of each item in the list
 
-        outArr = resp_model.classify(stream, outArr)
+        val out = resp_model.classify(stream, Array(1) {FloatArray(8)})[0]
 
-        Log.d("classify", "updateClassifyText: classified! " + outArr[0].joinToString(", "))
+        Log.d("classify", "updateClassifyText: classified! " + out.joinToString(", "))
 
-        return Resp.fromOneHot(outArr[0])
+        return Resp.fromOneHot(out)
     }
-
 
 
     fun save(act: Activity = Activity.UNDEFINED,

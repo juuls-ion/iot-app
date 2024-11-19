@@ -55,7 +55,7 @@
                     android:layout_height="match_parent"
                     android:background="@drawable/circular_shape"
                     android:indeterminate="false"
-                    android:progress="30"
+                    android:progress="31"
                     android:progressDrawable="@drawable/circular_progress_bar"
                     android:textAlignment="center" />
 
@@ -67,7 +67,7 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:gravity="center"
-                    android:text="30%"
+                    android:text="31%"
                     android:textColor="@color/colorPrimaryDark"
                     android:textSize="25sp"
                     android:textStyle="bold" />
@@ -80,7 +80,8 @@
                 android:layout_height="57dp"
                 android:layout_gravity="center_vertical"
                 android:layout_marginEnd="10dp"
-                android:text="Time Standing"
+                android:text="Walking Goal"
+                android:textStyle="bold"
                 android:textAlignment="textEnd"
                 android:textAllCaps="false"
                 android:textColor="@color/colorPrimaryDark"
@@ -112,7 +113,7 @@
                     android:layout_height="match_parent"
                     android:background="@drawable/circular_shape"
                     android:indeterminate="false"
-                    android:progress="50"
+                    android:progress="23"
                     android:progressDrawable="@drawable/circular_progress_bar"
                     android:textAlignment="center" />
 
@@ -124,7 +125,7 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:gravity="center"
-                    android:text="50%"
+                    android:text="23%"
                     android:textColor="@color/colorPrimaryDark"
                     android:textSize="25sp"
                     android:textStyle="bold" />
@@ -137,7 +138,8 @@
                 android:layout_height="57dp"
                 android:layout_gravity="center_vertical"
                 android:layout_marginEnd="10dp"
-                android:text="Daily Goal 2"
+                android:text="Running Goal"
+                android:textStyle="bold"
                 android:textAlignment="textEnd"
                 android:textColor="@color/colorPrimaryDark"
                 android:textSize="36sp" />
