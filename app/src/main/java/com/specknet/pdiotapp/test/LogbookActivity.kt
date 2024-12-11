@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.text.format.Time
 import android.util.Log
 import android.widget.DatePicker
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mikephil.charting.charts.BarChart
@@ -19,6 +20,7 @@ import com.specknet.pdiotapp.utils.FileManager
 import com.specknet.pdiotapp.utils.IOutputEnum
 import com.specknet.pdiotapp.utils.IOutputEnumCompanion
 import com.specknet.pdiotapp.utils.Resp
+import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -33,17 +35,28 @@ import kotlin.time.DurationUnit
 
 class LogbookActivity: AppCompatActivity() {
 
-    lateinit var actChart: BarChart
-    lateinit var respChart: BarChart
     lateinit var logbook_names: TextView
     lateinit var logbook_values: TextView
+
+    lateinit var bar_1: ProgressBar
+    lateinit var bar_1_time_text: TextView
+    lateinit var bar_1_text: TextView
+
+    lateinit var bar_2: ProgressBar
+    lateinit var bar_2_time_text: TextView
+    lateinit var bar_2_text: TextView
+
+    lateinit var bar_3: ProgressBar
+    lateinit var bar_3_time_text: TextView
+    lateinit var bar_3_text: TextView
+
+
     lateinit var datePicker: DatePicker
     var date: () -> Date = { datePicker.getDate() }
     lateinit var fileManager: FileManager
-
-    lateinit var data: BarDataSet
-
     lateinit var scheduledUpdate: CountUpTimer
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,24 +64,32 @@ class LogbookActivity: AppCompatActivity() {
         fileManager = FileManager(getExternalFilesDir(null), Activity)
 
         setContentView(R.layout.activity_logbook)
-        actChart = findViewById(R.id.actChart)
-        respChart = findViewById(R.id.respChart)
+
         logbook_names = findViewById(R.id.logbook_names)
         logbook_values = findViewById(R.id.logbook_values)
 
+        bar_1 = findViewById(R.id.bar_1)
+        bar_1_time_text = findViewById(R.id.bar_1_time_text)
+        bar_1_text = findViewById(R.id.bar_1_text)
+
+        bar_2 = findViewById(R.id.bar_2)
+        bar_2_time_text = findViewById(R.id.bar_2_time_text)
+        bar_2_text = findViewById(R.id.bar_2_text)
+
+        bar_3 = findViewById(R.id.bar_3)
+        bar_3_time_text = findViewById(R.id.bar_3_time_text)
+        bar_3_text = findViewById(R.id.bar_3_text)
+
         datePicker = findViewById(R.id.date_picker)
+
         val today = Calendar.getInstance()
         datePicker.init(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH)) {
                 view, year, month, day ->
         }
 
-        setupGraph(actChart, Activity)
-        setupGraph(respChart, Resp)
-
         scheduledUpdate = object: CountUpTimer(1000) {
             override fun onTick(elapsedTime: Long) {
-                updateGraph(actChart, Activity)
-                updateGraph(respChart, Resp)
+                updateGraph()
                 updateLogbook()
             }
         }
@@ -76,24 +97,6 @@ class LogbookActivity: AppCompatActivity() {
 
     }
 
-
-    fun setupGraph(chart: BarChart, type: IOutputEnumCompanion) {
-        var entries: List<BarEntry> = buildList {
-
-            for(x in type.stringList().indices) {
-                var entry = BarEntry(x.toFloat(), 0f)
-                add(entry)
-            }
-
-        }
-
-        data = BarDataSet(entries, "data")
-        data.stackLabels = type.stringList().toTypedArray()
-
-
-        chart.setFitBars(true)
-        chart.data = BarData(data)
-    }
 
 
     fun timeToString(time: Long): String{
@@ -121,7 +124,7 @@ class LogbookActivity: AppCompatActivity() {
         log += "\n"
         values += "\n"
         // Activities
-        fileManager.enum = Activity
+        fileManager.enum = Resp
         val resMap = fileManager.parse(date()).sum()
         for(r in Resp.values().drop(1)) {
             log += getString(R.string.logbook_entry, r.toString())
@@ -130,50 +133,51 @@ class LogbookActivity: AppCompatActivity() {
                 timeToString(resMap.get(r) ?: 0)
             )
         }
-
+        log+="\n\n\n\n\n\n\n"
+        values+="\n\n\n\n\n\n"
         logbook_names.setText(getString(R.string.logbook_title, log))
         logbook_values.setText(getString(R.string.logbook_value_header, values))
     }
 
 
-    fun updateGraph(chart: BarChart, type: IOutputEnumCompanion) {
-        fileManager.enum = type
+    fun updateGraph() {
+        fileManager.enum = Activity
         val actMap = fileManager.parse(date()).sum()
-        var value: Long
+        actMap.remove(Activity.UNDEFINED)
 
         Log.d("graph", "Summed activities")
+        val max_1 = actMap.maxByOrNull { it.value }
+        if (max_1 != null) actMap.remove(max_1.key)
+        val max_2 = actMap.maxByOrNull { it.value }
+        if (max_2 != null) actMap.remove(max_2.key)
+        val max_3 = actMap.maxByOrNull { it.value }
+        if (max_3 != null) actMap.remove(max_3.key)
 
-        // Build data set to use
-        val labels = mutableListOf<String>()
-        var index = 0
-        val entries = buildList<BarEntry> {
-            for(x in type.stringList().indices) {
-                value = TimeUnit.SECONDS.toMinutes(actMap.get(Activity.find(x))?:0)
-
-                if (Activity.find(x) == Activity.UNDEFINED ||
-                    value == 0.toLong()
-                )
-                    continue
-                Log.d("graph", "added bar " + Activity.find(x).toString())
-                add(BarEntry(index.toFloat(), value.toFloat(), Activity.find(x).toString()))
-                index ++
-                labels.add(Activity.find(x).toString())
-            }
-        }
-
-        if (entries.size == 0) {
-            setupGraph(chart, type)
+        if (max_1 == null || max_2 == null || max_3 == null) {
+            bar_1.progress = 10
+            bar_1_time_text.text = timeToString(0)
+            bar_1_text.setText(Activity.UNDEFINED.toStringResource())
+            bar_2.progress = 10
+            bar_2_time_text.text = timeToString(0)
+            bar_2_text.setText(Activity.UNDEFINED.toStringResource())
+            bar_3.progress = 10
+            bar_3_time_text.text = timeToString(0)
+            bar_3_text.setText(Activity.UNDEFINED.toStringResource())
             return
         }
-        data.values = entries
-        data.stackLabels = labels.toTypedArray()
 
-        Log.d("graph", "Set data")
+        bar_1.progress = 95
+        bar_1_time_text.text = timeToString(max_1.value)
+        bar_1_text.setText(max_1.key.toStringResource())
 
-        chart.setFitBars(true)
-        chart.data = BarData(data)
-        chart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
-        chart.invalidate()
+        bar_2.progress = (95 * (max_2.value.toDouble() / max_1.value)).toInt()
+        bar_2_time_text.text = timeToString(max_2.value)
+        bar_2_text.setText(max_2.key.toStringResource())
+
+        bar_3.progress = (95 * (max_3.value.toDouble() / max_1.value)).toInt()
+        bar_3_time_text.text = timeToString(max_3.value)
+        bar_3_text.setText(max_3.key.toStringResource())
+
     }
 
 

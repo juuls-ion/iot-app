@@ -4,9 +4,9 @@ import com.specknet.pdiotapp.R
 
 enum class Resp(override val value: Int, override val type: String = "respiratory"): IOutputEnum {
     UNDEFINED(-1),
-    BREATHING_NORMAL(0),
+    COUGHING(0),
     HYPERVENTILATING(1),
-    COUGHING(2),
+    BREATHING_NORMAL(2),
     SOCIAL_SIGNAL(3);
 
 

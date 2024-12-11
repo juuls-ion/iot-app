@@ -211,7 +211,7 @@ class ClassifyingActivity : AppCompatActivity() {
         }
 
         stopRecordingButton.setOnClickListener {
-            save()
+            fileManager.close()
             saveActivityData = false
         }
 
@@ -235,7 +235,7 @@ class ClassifyingActivity : AppCompatActivity() {
         val respText = findViewById<TextView>(R.id.resp_classify_text)
 
         physicalText.setText(curAction().toStringResource())
-        respText.setText(Resp.BREATHING_NORMAL.toStringResource())
+        respText.setText(curResp().toStringResource())
     }
 
     // Functionality

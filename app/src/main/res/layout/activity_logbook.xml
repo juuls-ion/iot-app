@@ -45,27 +45,147 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
-                android:text="Action Roundup"
+                android:layout_margin="10dp"
+                android:text="Activity Roundup"
                 android:textSize="26sp"
                 android:textStyle="bold" />
 
-            <com.github.mikephil.charting.charts.BarChart
-                android:id="@+id/actChart"
-                android:layout_width="match_parent"
-                android:layout_height="300dp" />
+<!--            Start Progress Bar 1 -->
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <ProgressBar
+                    android:id="@+id/bar_1"
+                    android:layout_weight = "1"
+                    android:layout_width="0dp"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:layout_height="40dp"
+                    android:progress="100"
+                    android:progressBackgroundTint="@color/colorPrimary"
+                    android:progressTint="@color/colorAccent"
+                    />
+
+                <TextView
+                    android:id="@+id/bar_1_time_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textSize="26sp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_gravity="center_vertical"
+                    android:textAlignment="textEnd"
+                    android:text="01:23"/>
+
+            </LinearLayout>
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:text="Resp Roundup"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                android:id="@+id/bar_1_text"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="22sp"
+                android:layout_gravity="center_vertical"
+                android:textAlignment="textEnd"
+                android:layout_marginBottom="10dp"
+                android:text="Sitting/Standing"/>
 
-            <com.github.mikephil.charting.charts.BarChart
-                android:id="@+id/respChart"
-                android:layout_width="match_parent"
-                android:layout_height="300dp" />
+            <!--        End Progress Bar 1      -->
 
+
+            <!--        Start Progress Bar 2 -->
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <ProgressBar
+                    android:id="@+id/bar_2"
+                    android:layout_weight = "1"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:layout_height="40dp"
+                    android:layout_width="0dp"
+                    android:progress="100"
+                    android:progressBackgroundTint="@color/colorPrimary"
+                    android:progressTint="@color/colorAccent"
+                    />
+
+                <TextView
+                    android:id="@+id/bar_2_time_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textSize="26sp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_gravity="center_vertical"
+                    android:textAlignment="textEnd"
+                    android:text="01:23"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/bar_2_text"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="22sp"
+                android:layout_gravity="center_vertical"
+                android:textAlignment="textEnd"
+                android:layout_marginBottom="10dp"
+                android:text="Sitting/Standing"/>
+
+            <!--        End Progress Bar 2      -->
+
+
+            <!--            Start Progress Bar 3 -->
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <ProgressBar
+                    android:id="@+id/bar_3"
+                    android:layout_weight = "1"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:layout_height="40dp"
+                    android:layout_width="0dp"
+                    android:progress="100"
+                    android:progressBackgroundTint="@color/colorPrimary"
+                    android:progressTint="@color/colorAccent"
+                    />
+
+                <TextView
+                    android:id="@+id/bar_3_time_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textSize="26sp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_gravity="center_vertical"
+                    android:textAlignment="textEnd"
+                    android:text="01:23"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/bar_3_text"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="22sp"
+                android:layout_gravity="center_vertical"
+                android:textAlignment="textEnd"
+                android:layout_marginBottom="10dp"
+                android:text="Sitting/Standing"/>
+
+            <!--        End Progress Bar 1-->
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -77,7 +197,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="start"
-                    android:text=""
+                    android:text="\n\n\n\n\n\n\n\n\n\n\n\n\n"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -86,7 +206,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:gravity="end"
-                    android:text=""
+                    android:text="\n\n\n\n\n\n\n\n\n\n\n\n\n"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
